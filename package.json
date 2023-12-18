@@ -1,0 +1,44 @@
+{
+  "name": "odataserver",
+  "version": "0.1.0",
+  "description": "A simple OData server implementation",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint . --ignore-path .eslintignore --ext .js,.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcrummel/ODataServer.git"
+  },
+  "keywords": [
+    "odata",
+    "nodejs"
+  ],
+  "author": "Michael Crummel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mcrummel/ODataServer/issues"
+  },
+  "homepage": "https://github.com/mcrummel/ODataServer#readme",
+  "dependencies": {
+    "mssql": "^9.0.1",
+    "ts-node": "^10.9.2",
+    "xmlbuilder": "^15.1.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@vitest/coverage-v8": "^1.0.4",
+    "eslint": "^8.55.0",
+    "eslint-config-standard-with-typescript": "^42.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-n": "^16.4.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.9",
+    "vitest": "^1.0.4"
+  }
+}
