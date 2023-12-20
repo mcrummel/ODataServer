@@ -1,12 +1,9 @@
 import {
   EntityDataModelSchema,
-  type IEntityType,
-  type IEntityDataModelSchema,
-  type IEntitySet
+  type IEntityType
 } from './EntityDataModelSchema'
 
 interface IEntityModelDefinition {
-  namespace: string
   entityName: string
   entitySetName: string
   navigation?: boolean
@@ -48,9 +45,11 @@ class EdmBuilder {
 
   // private variables
   private readonly models: IEntityModelDefinition[]
+  private readonly namespace: string
 
-  constructor () {
+  constructor (namespace: string) {
     this.models = []
+    this.namespace = namespace
   }
 
   // public methods
@@ -64,68 +63,54 @@ class EdmBuilder {
     return this
   }
 
-  public createEdmModel (): IEntityDataModelSchema[] {
-    const schemas: IEntityDataModelSchema[] = []
-    const entitySets: IEntitySet[] = []
+  public createEdmModel (): EntityDataModelSchema {
+    const schema: EntityDataModelSchema = new EntityDataModelSchema(this.namespace)
+    const entitySets = schema.entitySets
 
     // build out the entity sets so we can wire up navigation properties later
     for (const model of this.models) {
       entitySets.push({
-        Name: model.entitySetName,
-        EntityType: this.getEntityTypeNameFromModel(model)
+        name: model.entitySetName,
+        entityType: this.getEntityTypeNameFromModel(model)
       })
     }
 
     // build the schemas
-    let schema: EntityDataModelSchema | undefined
     for (const model of this.models) {
-      if (schema === undefined || schema.Namespace !== model.namespace) {
-        schema = new EntityDataModelSchema(model.namespace)
-        schemas.push(schema)
-      }
-
       const entityType: IEntityType = this.buildEntityType(model)
-      schema.EntityType.push(entityType)
+      schema.entityTypes.push(entityType)
 
       const modelEntityType = this.getEntityTypeNameFromModel(model)
-      const navProps = entityType.NavigationProperty
+      const navProps = entityType.navigationProperties
       if (navProps !== undefined && navProps.length > 0) {
-        const set = entitySets.find(_ => _.EntityType === modelEntityType)
+        const set = entitySets.find(_ => _.entityType === modelEntityType)
         if (set === undefined) { throw new Error(`Unknown EntitySet ${modelEntityType}`) }
 
-        set.NavigationPropertyBinding = []
+        set.navigationPropertiesBindings = []
         for (const prop of navProps) {
-          const navSet = entitySets.find(_ => _.EntityType === prop.Type)
-          if (navSet === undefined) { throw new Error(`Unknown EntitySet ${prop.Type}`) }
+          const navSet = entitySets.find(_ => _.entityType === prop.type)
+          if (navSet === undefined) { throw new Error(`Unknown EntitySet ${prop.type}`) }
 
-          set.NavigationPropertyBinding.push({
-            Path: prop.Name,
-            Target: navSet.Name
+          set.navigationPropertiesBindings.push({
+            path: prop.name,
+            target: navSet.name
           })
         }
       }
     }
 
-    schemas.push({
-      Namespace: 'Default',
-      EntityContainer: [{
-        Name: 'Container',
-        EntitySet: entitySets
-      }]
-    })
-
-    return schemas
+    return schema
   }
 
   private getEntityTypeNameFromModel (model: IEntityModelDefinition): string {
-    return `${model.namespace}.${model.entityName}`
+    return `${this.namespace}.${model.entityName}`
   }
 
   private buildEntityType (model: IEntityModelDefinition): IEntityType {
     const entityType: IEntityType = {
-      Name: model.entityName,
-      Key: [],
-      Property: []
+      name: model.entityName,
+      keys: [],
+      properties: []
     }
 
     for (const [name, value] of Object.entries(model)) {
@@ -134,23 +119,23 @@ class EdmBuilder {
       const valueObj = value as IEntityProperty
 
       if ((value as object)['navigation' as keyof object] === true) {
-        if (entityType.NavigationProperty === undefined) {
-          entityType.NavigationProperty = []
+        if (entityType.navigationProperties === undefined) {
+          entityType.navigationProperties = []
         }
 
-        entityType.NavigationProperty?.push({
-          Name: name,
-          Type: valueObj.type ?? ''
+        entityType.navigationProperties?.push({
+          name,
+          type: valueObj.type ?? ''
         })
       } else {
-        entityType.Property.push({
-          Name: name,
-          Type: this.convertToEdmType(valueObj.type ?? 'string'),
-          Nullable: valueObj.nullable ?? false
+        entityType.properties.push({
+          name,
+          type: this.convertToEdmType(valueObj.type ?? 'string'),
+          nullable: valueObj.nullable ?? false
         })
 
         if (valueObj.key === true) {
-          entityType.Key.push({ Name: name })
+          entityType.keys.push(name)
         }
       }
     }

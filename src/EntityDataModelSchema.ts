@@ -1,57 +1,57 @@
 interface IEntityDataModelSchema {
-  Namespace: string
-  EntityContainer?: IEntityContainer[] | undefined
-  EntityType?: IEntityType[] | undefined
+  namespace: string
+  entityTypes: IEntityType[] | undefined
+  entitySets: IEntitySet[] | undefined
 }
 
 interface IEntitySet {
-  Name: string
-  EntityType: string
-  NavigationPropertyBinding?: Array<{
-    Path: string
-    Target: string
+  name: string
+  entityType: string
+  navigationPropertiesBindings?: Array<{
+    path: string
+    target: string
   }>
 }
 
 interface IEntityContainer {
-  Name: string
-  EntitySet: IEntitySet[]
+  name: string
+  entitySet: IEntitySet[]
 }
 
 interface IEntityType {
-  Name: string
-  Key: Array<{
-    Name: string
+  name: string
+  keys: string[]
+  properties: Array<{
+    name: string
+    type: string
+    nullable: boolean
   }>
-  Property: Array<{
-    Name: string
-    Type: string
-    Nullable: boolean
-  }>
-  NavigationProperty?: Array<{
-    Name: string
-    Type: string
+  navigationProperties?: Array<{
+    name: string
+    type: string
   }>
 }
 
 interface IEntityAssociation {
-  Name: string
-  End: Array<{
-    Type: string
-    Role: string
-    Multiplicity: number
+  name: string
+  end: Array<{
+    type: string
+    role: string
+    multiplicity: number
   }>
 }
 
 class EntityDataModelSchema implements IEntityDataModelSchema {
   constructor (namespace: string) {
-    this.Namespace = namespace
-    this.EntityType = []
+    this.namespace = namespace
+    this.entityTypes = []
+    this.entitySets = []
   }
 
   // Properties
-  public Namespace: string
-  public EntityType: IEntityType[]
+  public namespace: string
+  public entityTypes: IEntityType[]
+  public entitySets: IEntitySet[]
 }
 
 export {

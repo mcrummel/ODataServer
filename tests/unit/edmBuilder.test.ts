@@ -8,7 +8,7 @@ class EdmBuilderAccessor extends EdmBuilder {
 }
 
 describe('Type conversion tests', () => {
-  const builder = new EdmBuilderAccessor()
+  const builder = new EdmBuilderAccessor('Tests.UnitTests')
   const typeMap = {
     boolean: 'Edm.Boolean',
     Boolean: 'Edm.Boolean',
@@ -46,7 +46,7 @@ describe('Type conversion tests', () => {
 })
 
 describe('Initialization Tests', () => {
-  const builder = new EdmBuilder()
+  const builder = new EdmBuilder('Tests.UnitTests')
 
   test('Can construct', () => {
     expect(builder).not.toBe(null)
@@ -54,34 +54,33 @@ describe('Initialization Tests', () => {
 })
 
 describe('Model building tests', () => {
-  const builder = new EdmBuilder()
   const defaultNs = 'Tests.UnitTests'
+  const builder = new EdmBuilder(defaultNs)
   const entityName = 'testEntity'
-  const testModel = {
-    namespace: defaultNs,
+  const testModel: IEntityModelDefinition = {
     entityName,
     entitySetName: 'TestEntity',
     Id: { type: 'int32', key: true },
     FirstName: { type: 'string' },
     LastName: { type: 'string' },
     DateOfBirth: { type: 'date', nullable: true }
-  } satisfies IEntityModelDefinition
+  }
 
   test('Can add model ', () => {
     const expectedModel = {
-      Name: entityName,
-      Key: [{ Name: 'Id' }],
-      Property: [
-        { Name: 'Id', Type: 'Edm.Int32', Nullable: false },
-        { Name: 'FirstName', Type: 'Edm.String', Nullable: false },
-        { Name: 'LastName', Type: 'Edm.String', Nullable: false },
-        { Name: 'DateOfBirth', Type: 'Edm.DateTime', Nullable: true }
+      name: entityName,
+      keys: ['Id'],
+      properties: [
+        { name: 'Id', type: 'Edm.Int32', nullable: false },
+        { name: 'FirstName', type: 'Edm.String', nullable: false },
+        { name: 'LastName', type: 'Edm.String', nullable: false },
+        { name: 'DateOfBirth', type: 'Edm.DateTime', nullable: true }
       ]
     }
 
     builder.addModel(testModel)
     const model = builder.createEdmModel()
-    const entityType = model.find(_ => _.Namespace === defaultNs)?.EntityType?.find(_ => _.Name === entityName)
+    const entityType = model.entityTypes?.find(_ => _.name === entityName)
 
     expect(entityType).not.toBe(null)
     expect(JSON.stringify(entityType)).toBe(JSON.stringify(expectedModel))
@@ -89,33 +88,30 @@ describe('Model building tests', () => {
 })
 
 describe('DataServices tests', () => {
-  const builder = new EdmBuilder()
-  const testModel = {
-    namespace: 'Tests.UnitTests',
+  const builder = new EdmBuilder('Tests.UnitTests')
+  const testModel: IEntityModelDefinition = {
     entityName: 'Person',
     entitySetName: 'People',
     Id: { type: 'int32', key: true },
     FirstName: { type: 'string' },
     LastName: { type: 'string' },
     Employment: { type: 'Tests.UnitTests.Employment', navigation: true }
-  } satisfies IEntityModelDefinition
+  }
 
-  const testModel2 = {
-    namespace: 'Tests.UnitTests',
+  const testModel2: IEntityModelDefinition = {
     entityName: 'Employment',
     entitySetName: 'Employments',
     Id: { type: 'int32', key: true },
     EmployeeId: { type: 'string' },
     HireDate: { type: 'date' }
-  } satisfies IEntityModelDefinition
+  }
 
-  const testModel3 = {
-    namespace: 'Tests.IntegrationTests',
+  const testModel3: IEntityModelDefinition = {
     entityName: 'TestEntity3',
     entitySetName: 'TestEntities3',
     Id: { type: 'int32', key: true },
     TestColumn: { type: 'string' }
-  } satisfies IEntityModelDefinition
+  }
 
   builder.addModel(testModel)
     .addModel(testModel2)
@@ -124,55 +120,47 @@ describe('DataServices tests', () => {
   test('Can build full schema', () => {
     const schema = builder.createEdmModel()
 
-    const expectedSchema = [{
-      Namespace: 'Tests.UnitTests',
-      EntityType: [{
-        Name: 'Person',
-        Key: [{ Name: 'Id' }],
-        Property: [
-          { Name: 'Id', Type: 'Edm.Int32', Nullable: false },
-          { Name: 'FirstName', Type: 'Edm.String', Nullable: false },
-          { Name: 'LastName', Type: 'Edm.String', Nullable: false }
+    const expectedSchema = {
+      namespace: 'Tests.UnitTests',
+      entityTypes: [{
+        name: 'Person',
+        keys: ['Id'],
+        properties: [
+          { name: 'Id', type: 'Edm.Int32', nullable: false },
+          { name: 'FirstName', type: 'Edm.String', nullable: false },
+          { name: 'LastName', type: 'Edm.String', nullable: false }
         ],
-        NavigationProperty: [
-          { Name: 'Employment', Type: 'Tests.UnitTests.Employment' }
+        navigationProperties: [
+          { name: 'Employment', type: 'Tests.UnitTests.Employment' }
         ]
       }, {
-        Name: 'Employment',
-        Key: [{ Name: 'Id' }],
-        Property: [
-          { Name: 'Id', Type: 'Edm.Int32', Nullable: false },
-          { Name: 'EmployeeId', Type: 'Edm.String', Nullable: false },
-          { Name: 'HireDate', Type: 'Edm.DateTime', Nullable: false }
+        name: 'Employment',
+        keys: ['Id'],
+        properties: [
+          { name: 'Id', type: 'Edm.Int32', nullable: false },
+          { name: 'EmployeeId', type: 'Edm.String', nullable: false },
+          { name: 'HireDate', type: 'Edm.DateTime', nullable: false }
         ]
-      }]
-    }, {
-      Namespace: 'Tests.IntegrationTests',
-      EntityType: [{
-        Name: 'TestEntity3',
-        Key: [{ Name: 'Id' }],
-        Property: [
-          { Name: 'Id', Type: 'Edm.Int32', Nullable: false },
-          { Name: 'TestColumn', Type: 'Edm.String', Nullable: false }
+      }, {
+        name: 'TestEntity3',
+        keys: ['Id'],
+        properties: [
+          { name: 'Id', type: 'Edm.Int32', nullable: false },
+          { name: 'TestColumn', type: 'Edm.String', nullable: false }
         ]
-      }]
-    }, {
-      Namespace: 'Default',
-      EntityContainer: [{
-        Name: 'Container',
-        EntitySet: [
-          {
-            Name: 'People',
-            EntityType: 'Tests.UnitTests.Person',
-            NavigationPropertyBinding: [
-              { Path: 'Employment', Target: 'Employments' }
-            ]
-          },
-          { Name: 'Employments', EntityType: 'Tests.UnitTests.Employment' },
-          { Name: 'TestEntities3', EntityType: 'Tests.IntegrationTests.TestEntity3' }
-        ]
-      }]
-    }]
+      }],
+      entitySets: [
+        {
+          name: 'People',
+          entityType: 'Tests.UnitTests.Person',
+          navigationPropertiesBindings: [
+            { path: 'Employment', target: 'Employments' }
+          ]
+        },
+        { name: 'Employments', entityType: 'Tests.UnitTests.Employment' },
+        { name: 'TestEntities3', entityType: 'Tests.UnitTests.TestEntity3' }
+      ]
+    }
 
     expect(JSON.stringify(schema)).toBe(JSON.stringify(expectedSchema))
   })
