@@ -1,5 +1,16 @@
 import { expect, test, describe } from 'vitest'
 import { MetadataBuilder } from '../../src/MetadataBuilder'
+import { type IEntityDataModelSchema } from '../../src/EntityDataModelSchema'
+
+class MetadataBuilderAccessor extends MetadataBuilder {
+  public _createEntityTypes (model: IEntityDataModelSchema): object[] {
+    return super.createEntityTypes(model) as object[]
+  }
+
+  public _createEntitySets (model: IEntityDataModelSchema): object[] {
+    return super.createEntitySets(model) as object[]
+  }
+}
 
 describe('Initialization Tests', () => {
   const builder = new MetadataBuilder()
@@ -10,7 +21,7 @@ describe('Initialization Tests', () => {
 })
 
 describe('Model generation tests', () => {
-  const builder = new MetadataBuilder()
+  const builder = new MetadataBuilderAccessor()
   const model = {
     namespace: 'Tests.UnitTests',
     entityTypes: [{
@@ -30,7 +41,7 @@ describe('Model generation tests', () => {
       properties: [
         { name: 'Id', type: 'Edm.Int32', nullable: false },
         { name: 'EmployeeId', type: 'Edm.String', nullable: false },
-        { name: 'HireDate', type: 'Edm.DateTime', nullable: false }
+        { name: 'HireDate', type: 'Edm.DateTime', nullable: true }
       ]
     }, {
       name: 'TestEntity3',
@@ -52,10 +63,7 @@ describe('Model generation tests', () => {
       { name: 'TestEntities3', entityType: 'Tests.UnitTests.TestEntity3' }
     ]
   }
-
-  test('Produces valid XML', () => {
-    const outputXml: string = builder.buildMetadata(model)
-    const expectedXml: string = `<?xml version="1.0"?>
+  const expectedXml: string = `<?xml version="1.0"?>
 <edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
   <edmx:DataServices>
     <Schema Namespace="Tests.UnitTests" xmlns="http://docs.oasis-open.org/odata/ns/edm">
@@ -70,7 +78,7 @@ describe('Model generation tests', () => {
       <EntityType Name="Employment">
         <Property Name="Id" Type="Edm.Int32"/>
         <Property Name="EmployeeId" Type="Edm.String"/>
-        <Property Name="HireDate" Type="Edm.DateTime"/>
+        <Property Name="HireDate" Type="Edm.DateTime" Nullable="true"/>
         <Key>
           <PropertyRef Name="Id"/>
         </Key>
@@ -93,6 +101,27 @@ describe('Model generation tests', () => {
   </edmx:DataServices>
 </edmx:Edmx>`
 
+  test('Produces valid XML', () => {
+    const outputXml: string = builder.buildMetadata(model)
+
     expect(outputXml).toBe(expectedXml)
+  })
+
+  test('createEntityTypes throws execption', () => {
+    const model: IEntityDataModelSchema = {
+      namespace: 'Test.Namespace',
+      entitySets: undefined,
+      entityTypes: undefined
+    }
+    expect(() => builder._createEntityTypes(model)).toThrowError()
+  })
+
+  test('createEntitySets throws execption', () => {
+    const model: IEntityDataModelSchema = {
+      namespace: 'Test.Namespace',
+      entitySets: undefined,
+      entityTypes: undefined
+    }
+    expect(() => builder._createEntitySets(model)).toThrowError()
   })
 })

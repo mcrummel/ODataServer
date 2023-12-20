@@ -9,7 +9,10 @@ export default defineConfig({
   plugins: [],
   test: {
     include: ['tests/**/*'],
-    exclude: ['dist/*', 'src/*']
+    exclude: ['dist/*', 'src/*'],
+    coverage: {
+      exclude: ['src/main.ts']
+    }
   },
   build: {
     minify: true,

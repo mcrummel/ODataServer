@@ -42,7 +42,7 @@ class MetadataBuilder {
     return xmlbuilder.create(metadata).end({ pretty: true })
   }
 
-  private createEntityTypes (model: IEntityDataModelSchema): IMetadataEntityType[] {
+  protected createEntityTypes (model: IEntityDataModelSchema): IMetadataEntityType[] {
     if (model.entityTypes === undefined) { throw new Error('model.entityTypes was undefined') }
 
     const entityTypes: IMetadataEntityType[] = []
@@ -76,7 +76,7 @@ class MetadataBuilder {
     return entityTypes
   }
 
-  private createEntitySets (model: IEntityDataModelSchema): IMetadataEntitySet[] {
+  protected createEntitySets (model: IEntityDataModelSchema): IMetadataEntitySet[] {
     if (model.entitySets === undefined) { throw new Error('model.entitySets was undefined') }
 
     const entitySets = []
